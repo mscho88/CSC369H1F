@@ -6,7 +6,117 @@ November 10, 2014
 									CSC369H1F
 -------------------------------------------------------------------------------
 								Assignment 2 Task 1
-	Task 1 Result
+
+	The table below shows the numbers of I, S, L and M where I, S, L and M
+indicate as the following:
+	I : the instruction read at the given memory address with the given size.
+	S : the storing data at the given memory address with the given size.
+	L : the loading data at the given memory address with the given size.
+	M : the modifying data at the given memory address with the given size.
+Also, the Memory Access 1 indicates the number of memory accesses before and
+after the markers and the Memory Access 2 indicates the number of memory acc-
+esses in algorithm component of the program (in between the markers).
+
+The first row is the simpleloop(heap)
+The second row is the simpleloop(stack)
+The third row is the matmul with the parameter 100
+The fourth row is the blocked with the parameters 100 and 25
+
+	Code pages 		Data pages 			Memory Access 1		Memory Access 2
+	I			S 		L 		M 							Start		End
+	260239		21989 	90686	10245						0x7ff0009ae 0x7ff0009af
+	159528		11851	40640	339 						0x7ff0009ae 0x7ff0009af
+	59243482	4267858	260386381130789						0x7ff00049e	0x7ff00049f
+	43803402	1276250	215624021091960						0x7ff00048e	0x7ff00048f
+
+Firstly, you need to compare between the outputs of simpleloop. If the simpleloop is set to heap then it invokes malloc a lot of time. If the simpleloop is set to stack then it invokes malloc only 339 times. 
+
+http://www.cs.cmu.edu/afs/cs.cmu.edu/project/cmt-40/Nice/RuleRefinement/bin/valgrind-3.2.0/lackey/lk_main.c
+
+	Task 1 Result (simpleloop)
+ simpleloop(heap)
+==16265== 
+==16265== Counted 1 call to main()
+==16265== 
+==16265== Jccs:
+==16265==   total:         40,815
+==16265==   taken:         25,171 ( 61%)
+==16265== 
+==16265== Executed:
+==16265==   SBs entered:   41,310
+==16265==   SBs completed: 21,263
+==16265==   guest instrs:  260,748
+==16265==   IRStmts:       1,628,300
+==16265== 
+==16265== Ratios:
+==16265==   guest instrs : SB entered  = 63 : 10
+==16265==        IRStmts : SB entered  = 394 : 10
+==16265==        IRStmts : guest instr = 62 : 10
+==16265== 
+==16265== Exit code:       0
+
+ simpleloop(stack)
+==28044== 
+==28044== Counted 1 call to main()
+==28044== 
+==28044== Jccs:
+==28044==   total:         30,625
+==28044==   taken:         15,170 ( 49%)
+==28044== 
+==28044== Executed:
+==28044==   SBs entered:   31,074
+==28044==   SBs completed: 21,050
+==28044==   guest instrs:  160,037
+==28044==   IRStmts:       974,015
+==28044== 
+==28044== Ratios:
+==28044==   guest instrs : SB entered  = 51 : 10
+==28044==        IRStmts : SB entered  = 313 : 10
+==28044==        IRStmts : guest instr = 60 : 10
+==28044== 
+==28044== Exit code:       0
+
+ matmul 100
+==37826== 
+==37826== Counted 1 call to main()
+==37826== 
+==37826== Jccs:
+==37826==   total:         4,962,932
+==37826==   taken:         2,526,718 ( 50%)
+==37826== 
+==37826== Executed:
+==37826==   SBs entered:   5,554,653
+==37826==   SBs completed: 2,835,665
+==37826==   guest instrs:  62,600,048
+==37826==   IRStmts:       356,876,919
+==37826== 
+==37826== Ratios:
+==37826==   guest instrs : SB entered  = 112 : 10
+==37826==        IRStmts : SB entered  = 642 : 10
+==37826==        IRStmts : guest instr = 57 : 10
+==37826== 
+==37826== Exit code:       0
+
+ blocked 100 25
+==49238== 
+==49238== Counted 1 call to main()
+==49238== 
+==49238== Jccs:
+==49238==   total:         1,296,274
+==49238==   taken:         1,118,215 ( 86%)
+==49238== 
+==49238== Executed:
+==49238==   SBs entered:   1,357,301
+==49238==   SBs completed: 224,148
+==49238==   guest instrs:  43,870,343
+==49238==   IRStmts:       232,354,471
+==49238== 
+==49238== Ratios:
+==49238==   guest instrs : SB entered  = 323 : 10
+==49238==        IRStmts : SB entered  = 1,711 : 10
+==49238==        IRStmts : guest instr = 52 : 10
+==49238== 
+==49238== Exit code:       0
 -------------------------------------------------------------------------------
 								Assignment 2 Task 2
 -------------------------------------------------------------------------------
