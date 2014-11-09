@@ -1,0 +1,69 @@
+#!/bin/bash
+
+contains() {
+    string="$1"
+    substring="$2"
+    if test "${string#*$substring}" != "$string"
+    then
+        return 0    # $substring is in $string
+    else
+        return 1    # $substring is not in $string
+    fi
+}
+
+# Execute the matmul with a parameter 100
+matmul="`valgrind --tool=lackey --trace-mem=yes simpleloop |& grep -e \"I \" -e \"S \" -e \"L \" -e \"M \"`"
+
+I=0
+S=0
+L=0
+M=0
+MA1=0
+MA2=0
+MA3=0
+pivot=0
+
+# Check the execution of the matmul with a parameter 100 in line by line
+for i in `echo $matmul | sed 's/I /I/g' | sed 's/S /S/g' | sed 's/L /L/g' | sed 's/M /M/g' | sed 's/ /\n/g'`
+do
+	var="${i:0:1}"
+	
+	# Check how the memory access occurs
+	if [ $var == "I" ]
+	then
+		# If the line is start with I, then it is the instruction read
+		I=$((I + 1))
+	elif [ $var == "S" ]
+	then
+		# If the line is start with S, then it is the data storing
+		S=$((S + 1))
+	elif [ $var == "L" ]
+	then
+		# If the line is start with L, then it is the data loading
+		L=$((L + 1))
+	elif [ $var == "M" ]
+	then
+		# If the line is start with M, then it is the data modification
+		M=$((M + 1))
+	fi
+	
+	# Check when the MARKER_START and the MARKER_END are accessed
+	if [ $pivot -eq 0 ]
+	then
+		MA1=$((MA1 + 1))
+	elif [ $pivot -eq 1 ]
+	then
+		MA2=$((MA2 + 1))
+	else
+		MA3=$((MA3 + 1)) 
+	fi
+done
+
+echo $I $S $L $M $MA1 $MA2 $MA3
+
+echo $matmulI $matmulS $matmulL $matmulM $matmulMAa $matmulMAb $matmulMAc | awk 'BEGIN {printf("\n %s\t|%s\t\t|%s\t|%s\n" ,"Code pages", "Data pages", "MemoryAccess1", "MemoryAccess")}
+{printf(" --------------------------------------------------------------------\n" )}
+{printf(" %s\t\t|%s\t%s\t%s\t|%s\t%s\t|%s\n" ,"I", "S", "L", "M", "before", "after", "between")}
+{printf(" %d\t\t|%d\t%d\t%d\t|%d\t%d\t|%d\n", $1, $2, $3, $4, $5, $6, $7)}'
+echo $blockedI $blockedS $blockedL $blockedM $blockedMAa $blockedMAb $blockedMAc | awk 'BEGIN {printf(" %d\t\t|%d\t%d\t%d\t|%d\t%d\t|%d\n", $1, $2, $3, $4, $5, $6, $7)}
+{printf("\n")}'
