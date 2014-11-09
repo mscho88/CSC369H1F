@@ -1,32 +1,27 @@
 #!/bin/bash
 
-contains() {
-    string="$1"
-    substring="$2"
-    if test "${string#*$substring}" != "$string"
-    then
-        return 0    # $substring is in $string
-    else
-        return 1    # $substring is not in $string
-    fi
-}
-
 # Execute the matmul with a parameter 100
 matmul="`valgrind --tool=lackey --trace-mem=yes simpleloop |& grep -e \"I \" -e \"S \" -e \"L \" -e \"M \"`"
 
-I=0
-S=0
-L=0
-M=0
-MA1=0
-MA2=0
-MA3=0
-pivot=0
+# Read the memory address of the MARKER_START and the MARKER_END
+marker_start="`cat .marker | sed 's/ /\n/g' | sed -n 1p | cut -c4-`"
+marker_end="`cat .marker | sed 's/ /\n/g' | sed -n 2p | cut -c4-`"
+
+I=0			# Number of the memory access of the instruction read
+S=0			# Number of the memory access of the data storing
+L=0			# Number of the memory access of the data loading
+M=0			# Number of the memory access of the data modification
+MA1=0		# Number of the memory access before the MARKER_START
+MA2=0		# Number of the memory access between the MARKER_START and
+			# the MARKER_END
+MA3=0		# Number of the memory access after the MARKER_END
+pivot=0		# Pivot point where the MARKER_START and the MARKER_END
+			# reached
 
 # Check the execution of the matmul with a parameter 100 in line by line
-for i in `echo $matmul | sed 's/I /I/g' | sed 's/S /S/g' | sed 's/L /L/g' | sed 's/M /M/g' | sed 's/ /\n/g'`
+for line in `echo $matmul | sed 's/I /I/g' | sed 's/S /S/g' | sed 's/L /L/g' | sed 's/M /M/g' | sed 's/ /\n/g'`
 do
-	var="${i:0:1}"
+	var="${line:0:1}"
 	
 	# Check how the memory access occurs
 	if [ $var == "I" ]
@@ -51,10 +46,28 @@ do
 	if [ $pivot -eq 0 ]
 	then
 		MA1=$((MA1 + 1))
+		
+		# If the line represents the memory access of MARKER_START,
+		# increase the pivot by 1. From this point, counting the number
+		# of memory access before the MARKER_START ends.
+		if test "${line#*$marker_start}" != "$line"
+		then
+			pivot=$((pivot + 1))
+		fi
 	elif [ $pivot -eq 1 ]
 	then
 		MA2=$((MA2 + 1))
+		
+		# If the line represents the memory access of MARKER_END,
+		# increase the pivot by 1. From this point, counting the number
+		# of the memory access after the MARKER_START and before the
+		# MARKER_END finishes
+		if test "${line#*$marker_end}" != "$line"
+		then
+			pivot=$((pivot + 1))
+		fi
 	else
+		# Count the number of the memory access after the MARKER_END.
 		MA3=$((MA3 + 1)) 
 	fi
 done
