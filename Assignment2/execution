@@ -1,0 +1,105 @@
+#!/bin/bash
+
+# Read the memory address of the MARKER_START and the MARKER_END
+marker_start="`cat .marker | sed 's/ /\n/g' | sed -n 1p | cut -c4-`"
+marker_end="`cat .marker | sed 's/ /\n/g' | sed -n 2p | cut -c4-`"
+
+I=0			# Number of the memory access of the instruction read
+S=0			# Number of the memory access of the data storing
+L=0			# Number of the memory access of the data loading
+M=0			# Number of the memory access of the data modification
+MA1=0		# Number of the memory access before the MARKER_START
+MA2=0		# Number of the memory access between the MARKER_START and
+			# the MARKER_END
+MA3=0		# Number of the memory access after the MARKER_END
+pivot=0		# Pivot point where the MARKER_START and the MARKER_END
+			# reached\
+			
+# Check the execution of the implemented input with the parameter(s)
+# in line by line
+for line in `echo $1 | sed 's/I /I/g' | sed 's/S /S/g' | sed 's/L /L/g' | sed 's/M /M/g' | sed 's/ /\n/g'`
+do
+	var="${line:0:1}"
+	
+	# Check how the memory access occurs
+	if [ $var == "I" ]
+	then
+		# If the line is start with I, then it is the instruction
+		# read
+		I=$((I + 1))
+	elif [ $var == "S" ]
+	then
+		# If the line is start with S, then it is the data storing
+		S=$((S + 1))
+	elif [ $var == "L" ]
+	then
+		# If the line is start with L, then it is the data loading
+		L=$((L + 1))
+	elif [ $var == "M" ]
+	then
+		# If the line is start with M, then it is the data
+		# modification
+		M=$((M + 1))
+	fi
+	
+	# Check when the MARKER_START and the MARKER_END are accessed
+	if [ $pivot -eq 0 ]
+	then
+		MA1=$((MA1 + 1))
+		
+		# If the line represents the memory access of MARKER_START,
+		# increase the pivot by 1. From this point, counting the
+		# number of memory access before the MARKER_START ends.
+		if test "${line#*$marker_start}" != "$line"
+		then
+			pivot=$((pivot + 1))
+		fi
+	elif [ $pivot -eq 1 ]
+	then
+		MA2=$((MA2 + 1))
+		
+		# If the line represents the memory access of MARKER_END,
+		# increase the pivot by 1. From this point, counting the
+		# number of the memory access after the MARKER_START and
+		# before the MARKER_END finishes
+		if test "${line#*$marker_end}" != "$line"
+		then
+			pivot=$((pivot + 1))
+		fi
+	else
+		# Count the number of the memory access after the MARKER_END.
+		MA3=$((MA3 + 1)) 
+	fi
+done
+pivot=0
+
+
+# Execute the matmul with a parameter 100
+#matmul="`valgrind --tool=lackey --trace-mem=yes matmul 100 |& grep -e \"I \" -e \"S \" -e \"L \" -e \"M \"`"
+#`valgrind --tool=lackey --trace-mem=yes matmul 100 >& "../../../../../../../tmp/matmul_output"`
+#matmul="`cat $1 | grep -e \"I \" -e \"S \" -e \"L \" -e \"M \"`"
+
+# Execute the blocked with two parameters 100 25
+#blocked="`valgrind --tool=lackey --trace-mem=yes blocked 100 25 |& grep -e \"I \" -e \"S \" -e \"L \" -e \"M \"`"
+#`valgrind --tool=lackey --trace-mem=yes blocked 100 25 >& ../../../../../../../tmp/blocked_output`
+#blocked="`cat ../../../../../../../../../../../tmp/blocked_output | grep -e \"I \" -e \"S \" -e \"L \" -e \"M \"`"
+
+
+
+
+#execution "$matmul"
+echo " Code Pages"$'\t'"|Data Pages"$'\t'$'\t'"|MemoryAccess1"$'\t'"|MemoryAccess2"
+echo " ----------------------------------------------------------------------"
+echo " I" $'\t'$'\t'"|S" $'\t' "L" $'\t' "M" $'\t'"|start"$'\t'"end" $'\t'"|between"
+echo " "$I$'\t'$'\t'"|"$S$'\t'$L$'\t'$M$'\t'"|"$MA1$'\t'$MA2$'\t'"|"$MA3
+
+# Read the new memory address of the MARKER_START and the MARKER_END of
+# the file blocked
+#$matmul="`cat ../../../../../../../../../../../tmp/blocked_output | grep -e \"I \" -e \"S \" -e \"L \" -e \"M \"`"
+#marker_start="`cat .marker | sed 's/ /\n/g' | sed -n 1p | cut -c4-`"
+#marker_end="`cat .marker | sed 's/ /\n/g' | sed -n 2p | cut -c4-`"
+#rm -f .marker
+#execution "$matmul"
+#echo " "$I$'\t'$'\t'"|"$S$'\t'$L$'\t'$M$'\t'"|"$MA1$'\t'$MA2$'\t'"|"$MA3
+
+
